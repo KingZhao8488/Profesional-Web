@@ -74,13 +74,13 @@ header {
         color: var(--c-primary);
         margin: 7rem 20rem 2.5rem 20rem;
         line-height: 5.5rem;
-        span {
-            background: linear-gradient(135deg, #F95738 0%, #F4D35E 100%);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;   /* makes the text reveal the gradient */
-        }
     }
+
+    /* Mantener color azul en partes fijas */
+    h1 span[data-translate] {
+        color: var(--c-primary);
+    }
+
     h2 {
         font-family: var(--f-secondary);
         font-size: 1.5rem;
@@ -89,6 +89,7 @@ header {
         margin: 1rem 30rem 2rem 30rem;
         line-height: 2rem;
     }
+
     a {
         display: inline-block;
         background-color: var(--c-secondary);
@@ -107,13 +108,88 @@ header {
             background-color: var(--c-accent);
         }
     }
+
     p {
         font-family: var(--f-secondary);
         font-size: 1rem;
         color: var(--c-text-light);
         margin: 2rem 30rem 2rem 30rem;
     }
-    
+}
+
+/* ========================================
+   TEXTO ANIMADO EN EL HEADER
+   ======================================== */
+
+header h1 .animated-text-wrapper {
+    display: inline-block;
+    position: relative;
+}
+
+header h1 .animated-text {
+    background: linear-gradient(135deg, #F95738 0%, #F4D35E 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    font-weight: 700;
+    display: inline-block;
+    position: relative;
+    animation: slideIn 0.6s ease-out;
+}
+
+/* Animación de entrada desde la derecha */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Animación de salida hacia la izquierda */
+@keyframes slideOut {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+}
+
+/* Clase para aplicar la animación de salida */
+header h1 .animated-text.slide-out {
+    animation: slideOut 0.5s ease-in forwards;
+}
+
+/* Efecto de brillo sutil (opcional) */
+header h1 .animated-text::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0.3) 50%,
+        rgba(255, 255, 255, 0) 100%
+    );
+    animation: shine 3s ease-in-out infinite;
+}
+
+@keyframes shine {
+    0%, 100% {
+        left: -100%;
+    }
+    50% {
+        left: 100%;
+    }
 }
 
 .problema {

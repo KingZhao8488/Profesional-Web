@@ -460,3 +460,106 @@ function canSubmitForm() {
 // Exportar funciones para uso global si es necesario
 window.changeLanguage = changeLanguage;
 window.trackButtonClick = trackButtonClick;
+
+// ========================================
+// ANIMACIÓN DE TEXTO EN EL HEADER
+// ========================================
+
+// Lista de frases a rotar
+const animatedPhrases = [
+    'máquina digital',
+    'solución electrónica',
+    'equipo inteligente',
+    'dispositivo avanzado',
+    'herramienta digital',
+    'sistema conectado',
+    'plataforma interactiva',
+    'tecnología portátil',
+    'terminal eficiente',
+    'módulo automatizado',
+    'motor tecnológico'
+];
+
+// Lista de frases en inglés (para cuando cambies de idioma)
+const animatedPhrasesEN = [
+    'digital machine',
+    'electronic solution',
+    'smart equipment',
+    'advanced device',
+    'digital tool',
+    'connected system',
+    'interactive platform',
+    'portable technology',
+    'efficient terminal',
+    'automated module',
+    'technological engine'
+];
+
+let currentPhraseIndex = 0;
+let animationInterval = null;
+
+// Función para cambiar el texto animado
+function changeAnimatedText() {
+    const animatedTextElement = document.getElementById('animatedText');
+    
+    if (!animatedTextElement) return;
+    
+    // Aplicar animación de salida
+    animatedTextElement.classList.add('slide-out');
+    
+    // Esperar a que termine la animación de salida
+    setTimeout(() => {
+        // Cambiar el índice
+        currentPhraseIndex = (currentPhraseIndex + 1) % animatedPhrases.length;
+        
+        // Obtener la lista correcta según el idioma
+        const phrasesList = currentLanguage === 'es' ? animatedPhrases : animatedPhrasesEN;
+        
+        // Cambiar el texto
+        animatedTextElement.textContent = phrasesList[currentPhraseIndex];
+        
+        // Quitar la clase de salida y reiniciar animación
+        animatedTextElement.classList.remove('slide-out');
+        
+        // Forzar reflow para reiniciar la animación
+        void animatedTextElement.offsetWidth;
+        
+        // La animación de entrada se aplicará automáticamente por el CSS
+    }, 500); // Tiempo de la animación de salida
+}
+
+// Función para iniciar la rotación de texto
+function startTextAnimation() {
+    // Cambiar texto cada 3 segundos
+    animationInterval = setInterval(changeAnimatedText, 3000);
+}
+
+// Función para detener la animación (útil si quieres pausarla)
+function stopTextAnimation() {
+    if (animationInterval) {
+        clearInterval(animationInterval);
+        animationInterval = null;
+    }
+}
+
+// Actualizar la función de cambio de idioma para incluir las frases animadas
+const originalChangeLanguage = changeLanguage;
+changeLanguage = function(lang) {
+    // Llamar a la función original
+    originalChangeLanguage(lang);
+    
+    // Actualizar el texto animado al idioma nuevo
+    const animatedTextElement = document.getElementById('animatedText');
+    if (animatedTextElement) {
+        const phrasesList = lang === 'es' ? animatedPhrases : animatedPhrasesEN;
+        animatedTextElement.textContent = phrasesList[currentPhraseIndex];
+    }
+};
+
+// Iniciar la animación cuando se carga la página
+document.addEventListener('DOMContentLoaded', function() {
+    // Esperar 2 segundos antes de iniciar la rotación
+    setTimeout(() => {
+        startTextAnimation();
+    }, 2000);
+});
