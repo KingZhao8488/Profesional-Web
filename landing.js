@@ -258,18 +258,16 @@ function validateForm(formData) {
 function sendToWhatsApp(formData) {
     // Construir mensaje para WhatsApp
     const message = `
-🎯 *Nueva Solicitud de Auditoría*
+ *Nueva Solicitud de Auditoría*
 
-👤 *Nombre:* ${formData.name}
-📧 *Email:* ${formData.email}
-${formData.phone ? `📱 *Teléfono:* ${formData.phone}` : ''}
-💼 *Servicio:* ${formData.service}
+ *Nombre:* ${formData.name}
+ *Email:* ${formData.email}
+${formData.phone ? `*Teléfono:* ${formData.phone}` : ''}
+ *Servicio:* ${formData.service}
 
-📝 *Mensaje:*
+ *Mensaje:*
 ${formData.message}
 
----
-Enviado desde: ${window.location.href}
     `.trim();
     
     // Codificar mensaje para URL
