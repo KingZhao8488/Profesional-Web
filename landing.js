@@ -5,6 +5,9 @@
 // Número de WhatsApp (CAMBIA ESTE NÚMERO POR EL TUYO)
 const WHATSAPP_NUMBER = '573043901902'; // Formato: código país + número sin espacios ni guiones
 
+// Obtén tu key gratis en: https://web3forms.com
+const WEB3FORMS_ACCESS_KEY = "b979c435-6e52-4e9c-b5f6-87166a88269a"; // ← CAMBIAR AQUÍ
+
 // Idioma por defecto
 let currentLanguage = 'es';
 
@@ -220,14 +223,12 @@ function validateEmail(email) {
 function validateForm(formData) {
     const errors = [];
     
-    // Validar nombre (requerido)
     if (!formData.name || formData.name.trim().length < 2) {
         errors.push(currentLanguage === 'es' 
             ? 'El nombre debe tener al menos 2 caracteres' 
             : 'Name must be at least 2 characters');
     }
     
-    // Validar email (requerido y formato)
     if (!formData.email) {
         errors.push(currentLanguage === 'es' 
             ? 'El correo electrónico es requerido' 
@@ -238,14 +239,12 @@ function validateForm(formData) {
             : 'Email is not valid');
     }
     
-    // Validar servicio (requerido)
     if (!formData.service) {
         errors.push(currentLanguage === 'es' 
             ? 'Por favor selecciona un servicio' 
             : 'Please select a service');
     }
     
-    // Validar mensaje (requerido)
     if (!formData.message || formData.message.trim().length < 10) {
         errors.push(currentLanguage === 'es' 
             ? 'El mensaje debe tener al menos 10 caracteres' 
@@ -256,30 +255,26 @@ function validateForm(formData) {
 }
 
 function sendToWhatsApp(formData) {
-    // Construir mensaje para WhatsApp
     const message = `
- *Nueva Solicitud de Auditoría*
+🎯 *Nueva Solicitud de Auditoría*
 
- *Nombre:* ${formData.name}
- *Email:* ${formData.email}
-${formData.phone ? `*Teléfono:* ${formData.phone}` : ''}
- *Servicio:* ${formData.service}
+👤 *Nombre:* ${formData.name}
+📧 *Email:* ${formData.email}
+${formData.phone ? `📱 *Teléfono:* ${formData.phone}` : ''}
+💼 *Servicio:* ${formData.service}
 
- *Mensaje:*
+📝 *Mensaje:*
 ${formData.message}
 
+---
+Enviado desde: ${window.location.href}
     `.trim();
     
-    // Codificar mensaje para URL
     const encodedMessage = encodeURIComponent(message);
-    
-    // Crear URL de WhatsApp
     const whatsappURL = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`;
     
-    // Abrir WhatsApp en nueva pestaña
     window.open(whatsappURL, '_blank');
     
-    // Registrar evento en Google Analytics si está disponible
     if (typeof gtag !== 'undefined') {
         gtag('event', 'form_submit', {
             'event_category': 'Contact',
@@ -296,17 +291,17 @@ function showFormMessage(message, isError = false) {
         formMessage.className = isError ? 'form-message error' : 'form-message success';
         formMessage.style.display = 'block';
         
-        // Ocultar mensaje después de 5 segundos
+        formMessage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        
         setTimeout(() => {
             formMessage.style.display = 'none';
-        }, 5000);
+        }, 8000);
     }
 }
 
-function handleFormSubmit(event) {
+async function handleFormSubmit(event) {
     event.preventDefault();
     
-    // Obtener datos del formulario
     const formData = {
         name: document.getElementById('contactName').value,
         email: document.getElementById('contactEmail').value,
@@ -315,7 +310,6 @@ function handleFormSubmit(event) {
         message: document.getElementById('contactMessage').value
     };
     
-    // Validar formulario
     const errors = validateForm(formData);
     
     if (errors.length > 0) {
@@ -323,14 +317,110 @@ function handleFormSubmit(event) {
         return;
     }
     
-    // Enviar a WhatsApp
-    sendToWhatsApp(formData);
+    if (!canSubmitForm()) {
+        return;
+    }
     
-    // Mostrar mensaje de éxito
-    showFormMessage(translations[currentLanguage].formSuccess, false);
+    const submitButton = document.querySelector('.form-submit');
+    const originalText = submitButton.textContent;
+    submitButton.disabled = true;
+    submitButton.classList.add('loading');
+    submitButton.textContent = translations[currentLanguage].formSending;
     
-    // Limpiar formulario
-    document.getElementById('contactForm').reset();
+    try {
+        const web3FormsData = {
+            access_key: WEB3FORMS_ACCESS_KEY,
+            name: formData.name,
+            email: formData.email,
+            phone: formData.phone || 'No proporcionado',
+            subject: `Nueva solicitud de auditoría - ${formData.service}`,
+            from_name: formData.name,
+            message: `
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+NUEVA SOLICITUD DE AUDITORÍA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+DATOS DEL CLIENTE:
+Nombre: ${formData.name}
+Email: ${formData.email}
+Teléfono: ${formData.phone || 'No proporcionado'}
+
+SERVICIO DE INTERÉS:
+${formData.service}
+
+MENSAJE:
+${formData.message}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Enviado desde: ${window.location.href}
+Fecha: ${new Date().toLocaleString('es-CO')}
+            `.trim(),
+            redirect: false,
+            replyto: formData.email,
+        };
+        
+        const response = await fetch('https://api.web3forms.com/submit', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(web3FormsData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            console.log('✅ Email enviado correctamente a través de Web3Forms');
+            
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            sendToWhatsApp(formData);
+            
+            showFormMessage(translations[currentLanguage].formSuccess, false);
+            
+            document.getElementById('contactForm').reset();
+            
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'form_submit', {
+                    'event_category': 'Contact',
+                    'event_label': formData.service,
+                    'value': 1
+                });
+            }
+            
+        } else {
+            throw new Error(result.message || 'Error al enviar el email');
+        }
+        
+    } catch (error) {
+        console.error('❌ Error al enviar el formulario:', error);
+        
+        showFormMessage(
+            currentLanguage === 'es' 
+                ? 'Hubo un error al enviar el email. Te redirigiremos a WhatsApp en 2 segundos...' 
+                : 'There was an error sending the email. We will redirect you to WhatsApp in 2 seconds...',
+            true
+        );
+        
+        setTimeout(() => {
+            sendToWhatsApp(formData);
+        }, 2000);
+        
+        if (typeof gtag !== 'undefined') {
+            gtag('event', 'form_error', {
+                'event_category': 'Contact',
+                'event_label': error.message,
+            });
+        }
+        
+    } finally {
+        setTimeout(() => {
+            submitButton.disabled = false;
+            submitButton.classList.remove('loading');
+            submitButton.textContent = originalText;
+        }, 2000);
+    }
 }
 
 // ========================================
